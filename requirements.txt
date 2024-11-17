@@ -1,4 +1,4 @@
-memray
+aiofile
 msgpack
 numpy
 pydantic
