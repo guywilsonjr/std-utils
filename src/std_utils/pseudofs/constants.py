@@ -1,5 +1,6 @@
-import typing
-
+import re
+from typing import Final
+from re import Pattern
 
 
 cpuinfo_keys = (
@@ -9,32 +10,8 @@ cpuinfo_keys = (
 'model_name', 'physical_id', 'power_management', 'processor', 'siblings',
 'stepping', 'vendor_id', 'vmx_flags', 'wp')
 
-
-class CPUInfoType(typing.NamedTuple):
-    address_sizes: str
-    apicid: str
-    bogomips: str
-    bugs: str
-    cache_alignment: str
-    cache_size: str
-    clflush_size: str
-    core_id: str
-    cpu_MHz: str
-    cpu_cores: str
-    cpu_family: int
-    cpuid_level: str
-    flags: str
-    fpu: str
-    fpu_exception: str
-    initial_apicid: str
-    microcode: str
-    model: str
-    model_name: str
-    physical_id: str
-    power_management: str
-    processor: str
-    siblings: str
-    stepping: str
-    vendor_id: str
-    vmx_flags: str
-    wp: str
+_address_sizes_pattern: Final[Pattern] = re.compile(
+    r'\d{1,3} bits physical, \d{1,3} bits virtual'
+)
+_cache_size_pattern: Pattern = re.compile(r'\d+ KB')
+_word_list_pattern: Pattern = re.compile(r'[\w\s]+')

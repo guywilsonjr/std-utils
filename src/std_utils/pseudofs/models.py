@@ -1,33 +1,69 @@
+import re
+from collections import OrderedDict
 from decimal import Decimal
-from enum import StrEnum
+from enum import auto, StrEnum
 from fractions import Fraction
-from numbers import Integral
-from typing import ClassVar
+from numbers import Integral, Number, Rational, Real
+from re import Pattern
+from typing import Any, ClassVar, Final, Literal
+OrderedDict
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator, GetCoreSchemaHandler, model_validator, TypeAdapter)
+from pydantic.alias_generators import to_pascal
+from pydantic_core import core_schema, CoreSchema
 
-from pydantic import BaseModel, Field, field_validator
 
+features = {}
 
-class TestMeasurement(BaseModel):
-    value: float
-    unit: str
+def get_cache_strings_config():
+    if 'low_memory' in features:
+        return 'none'
+
+    return 'all'
+
+CONFIG_CACHE_STRINGS: Final[str] = get_cache_strings_config()
+
+class FractionModel(Fraction):
+    @classmethod
+    def from_decimal(cls, dec: Decimal) -> 'FractionModel':
+        return cls(dec)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source: Any,
+        handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.float_schema()
 
 class Measurement(BaseModel):
-    value: Fraction = Field(json_schema_extra={
-        'properties': {
-            'value': {'title': 'Value', 'type': 'number'},
-            'unit': {'title': 'Unit', 'type': 'string'}
-        },
-        'required': ['value', 'unit'],
-        'title': 'TestMeasurement',
-        'type': 'object'
-    })
+    #model_config = ConfigDict(arbitrary_types_allowed=True)
+    value: FractionModel
     unit: str
+
+    @field_validator('value', mode='before')
+    def _validate_fraction(cls, value: Number) -> Fraction:
+        try:
+            return FractionModel(value)
+        except ValueError:
+            raise ValueError(
+                f"Value must be a valid rational number. Found: {value}"
+            )
+
+
+
+
+
+
 
 
 class MemoryUnit(StrEnum):
     BIT = "bit"
     BYTE = "byte"
-    KB = "kb"
+    KB = auto()
     KIB = "kib"
     MB = "mb"
     MIB = "mib"
@@ -39,12 +75,13 @@ class MemoryUnit(StrEnum):
     PIB = "pib"
 
 
+
 class MemoryMeasurement(Measurement):
     unit: MemoryUnit
-    value: Fraction = Field(ge=0)
-    units_to_bits: ClassVar[dict[MemoryUnit, int]] = Field(
-        frozen=True,
-        default={
+    value: FractionModel
+
+
+    units_to_bits: ClassVar[dict[MemoryUnit, int]] = {
             MemoryUnit.BIT: 1,
             MemoryUnit.BYTE: 8,
             MemoryUnit.KB: 8 * 10 ** 3,
@@ -57,18 +94,26 @@ class MemoryMeasurement(Measurement):
             MemoryUnit.TIB: 8 * 2 ** 40,
             MemoryUnit.PB: 8 * 10 ** 15,
             MemoryUnit.PIB: 8 * 2 ** 50,
-        })
+        }
 
     @classmethod
-    def get_bits(cls, value: Fraction, units: MemoryUnit) -> Fraction:
+    def get_bits(cls, value: FractionModel, units: MemoryUnit) -> Real:
+        print(cls.units_to_bits)
         return value * cls.units_to_bits[units]
 
 
-    @field_validator('value')
+    @model_validator(mode='before')
     @classmethod
-    def value_validator(cls, value: Fraction) -> Fraction:
-        if cls.get_bits(value, cls.unit).is_integer():
+    def value_validator(cls, data: dict) -> dict:
+        value= data['value']
+        print(MemoryUnit._member_map_)
+        unit = MemoryUnit['KB']
+        numbits = cls.get_bits(value, unit)
+        if not numbits.is_integer():
+            raise ValueError("Memory size must be an integer number of bits. Found: {numbits}")
+        elif numbits < 0:
             raise ValueError("Memory size must be non-negative")
+        return data
 
 
 
@@ -96,34 +141,60 @@ class MemoryMeasurement(Measurement):
 
         return MemoryMeasurement(value=converted_value, unit=to_unit)
 
-class CPUInfoInputModel(BaseModel):
-    address_sizes: str
-    apicid: str
-    bogomips: str
-    bugs: str
-    cache_alignment: str
-    cache_size: str
-    clflush_size: str
-    core_id: str
-    cpu_MHz: str
-    cpu_cores: str
+
+def genalias(name: str) -> str:
+    underscored_fields = ('cache_alignment', 'vendor_id', 'fpu_exception')
+    return name.replace('_', ' ') if name not in underscored_fields else name
+
+class CPUInfoBase(BaseModel):
+    model_config = ConfigDict(
+        cache_strings=CONFIG_CACHE_STRINGS,
+        protected_namespaces=(
+            f'model_{prefix}'
+            for prefix in 'cdefjprv'
+        ),
+        alias_generator=genalias
+    )
+    apicid: int
+    bogomips: Decimal
+    bugs: str = Field(pattern=_word_list_pattern)
+    cache_alignment: int
+    clflush_size: int
+    core_id: int
+    cpu_MHz: Decimal
+    cpu_cores: int
     cpu_family: int
-    cpuid_level: str
-    flags: str
-    fpu: str
-    fpu_exception: str
-    initial_apicid: str
-    microcode: str
-    model: str
+    cpuid_level: int
+    flags: str = Field(pattern=_word_list_pattern)
+    fpu: Literal['yes', 'no']
+    fpu_exception: Literal['yes', 'no']
+    initial_apicid: int
+    model: int
     model_name: str
-    physical_id: str
+    physical_id: int
     power_management: str
-    processor: str
-    siblings: str
-    stepping: str
-    vendor_id: str
+    processor: int
+    siblings: int
+    stepping: int
+    vendor_id: str = Field(pattern=re.compile(r'\w+'))
     vmx_flags: str
-    wp: str
+    wp: Literal['yes', 'no']
+
+
+class CPUInfoInputModel(CPUInfoBase):
+    _address_sizes_pattern: ClassVar[Pattern] = re.compile(
+        r'\d{1,3} bits physical, \d{1,3} bits virtual'
+    )
+    _cache_size_pattern: Pattern = re.compile(r'\d+ KB')
+    _word_list_pattern: Pattern = re.compile(r'[\w\s]+')
+    address_sizes: str = Field(pattern=_address_sizes_pattern)
+    cache_size: str = Field(pattern=_cache_size_pattern)
+    microcode: int
+
+
+    @field_validator('microcode', mode='before')
+    def _validate_microcode(cls, microcode: str) -> int:
+        return int(microcode, 16)
 
 
 class CPUInfoAddressSizes(BaseModel):
@@ -133,30 +204,54 @@ class CPUInfoAddressSizes(BaseModel):
 
 
 class CPUInfoOutputModel(BaseModel):
+    _address_sizes_pattern: ClassVar[Pattern] = re.compile(
+        r'\d{1,3} bits physical, \d{1,3} bits virtual'
+    )
+    _cache_size_pattern: Pattern = re.compile(r'\d+ KB')
+    _word_list_pattern: Pattern = re.compile(r'[\w\s]+')
     address_sizes: CPUInfoAddressSizes
     apicid: int
     bogomips: Decimal
-    bugs: tuple[str]
+    bugs: str = Field(pattern=_word_list_pattern)
     cache_alignment: int
-    cache_size: str
-    clflush_size: str
-    core_id: str
-    cpu_MHz: str
-    cpu_cores: str
+    cache_size: MemoryMeasurement
+    clflush_size: int
+    core_id: int
+    cpu_MHz: Decimal
+    cpu_cores: int
     cpu_family: int
-    cpuid_level: str
-    flags: str
-    fpu: str
-    fpu_exception: str
-    initial_apicid: str
-    microcode: str
-    model: str
+    cpuid_level: int
+    flags: str = Field(pattern=_word_list_pattern)
+    fpu: Literal['yes', 'no']
+    fpu_exception: Literal['yes', 'no']
+    initial_apicid: int
+    model: int
     model_name: str
-    physical_id: str
+    physical_id: int
     power_management: str
-    processor: str
-    siblings: str
-    stepping: str
-    vendor_id: str
+    processor: int
+    siblings: int
+    stepping: int
+    vendor_id: str = Field(pattern=re.compile(r'\w+'))
     vmx_flags: str
-    wp: str
+    wp: Literal['yes', 'no']
+
+    @classmethod
+    def from_cpu_info_input_model(cls, input_model: CPUInfoInputModel) -> 'CPUInfoOutputModel':
+        dat = input_model.cache_size.split()[0]
+        cache_size = MemoryMeasurement(
+            value=FractionModel.from_decimal(Decimal(dat)),
+            unit=MemoryUnit.KB
+        )
+        split_data = input_model.address_sizes.strip().split()
+        address_sizes = CPUInfoAddressSizes(
+            physical=int(split_data[0]),
+            virtual=int(split_data[3])
+        )
+        old_info = input_model.model_dump(by_alias=False)
+        old_info.update({
+            'address_sizes': address_sizes,
+            'cache_size': cache_size,
+            'microcode': str(input_model.microcode)
+        })
+        return cls(**old_info)

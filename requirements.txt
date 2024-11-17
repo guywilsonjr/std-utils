@@ -1,3 +1,5 @@
+memray
 msgpack
 numpy
 pydantic
+
