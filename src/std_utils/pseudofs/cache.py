@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import typing
 
@@ -84,11 +85,15 @@ def construct_cpu_cache_level_data(data: tuple[str, str, str, str, str, str, str
 
 
 async def get_cache_cpu_info(cpu_name: str):
-    full_cache_dirs = tuple('/'.join((sysfs_cpu_dir, cpu_name,'cache', cache_dir)) for cache_dir in cache_dirs)
+    join_fields = (sysfs_cpu_dir, cpu_name, 'cache')
+    full_cache_dirs = tuple(
+        '/'.join(
+            (*join_fields, cache_dir)
+        ) for cache_dir in cache_dirs
+    )
     test_dir = full_cache_dirs[0]
-    print(test_dir)
     data = await get_cache_cpu_level_info(test_dir)
+    logging.info(data)
     return construct_cpu_cache_level_data(data)
 
-print(get_cpu_list())
-print(asyncio.run(get_cache_cpu_info('cpu0')))
+
