@@ -7,7 +7,6 @@ addopts = [
     "-vvv",
     "-p no:cacheprovider",
     "--cache-clear",
-    "--import-mode=importlib",
     # benchmark flags
     "--benchmark-enable",
     "--benchmark-verbose",
@@ -25,7 +24,7 @@ addopts = [
     "--benchmark-warmup-iterations=5",
     "--benchmark-min-time=0.000000001",
     "--benchmark-autosave",
-    "--benchmark-cprofile-loops=10"
+    "--benchmark-cprofile-loops=20"
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"

@@ -1,21 +1,19 @@
-import asyncio
-import logging
-from typing import Coroutine
 
-from _pytest.mark import ParameterSet
-
+from pytest_benchmark.fixture import BenchmarkFixture
 from std_utils.pseudofs import cache
+from utils import get_benchmark_data
 import pytest
-from pytest_benchmark.plugin import benchmark
 
 
 
-@pytest.mark.parametrize(('async_func',), ((cache.get_all_cpu_info,),))
 @pytest.mark.benchmark
-def test_async_func(benchmark, async_func: Coroutine):
-    @benchmark
-    def sync_test_func():
-        return asyncio.run(async_func())
+def test_get_all_cpu_info(benchmark: BenchmarkFixture):
+    benchmark_data = get_benchmark_data(cache.get_all_cpu_info)
+    benchmark(**benchmark_data)
 
-    assert sync_test_func
+
+
+
+
+
 
