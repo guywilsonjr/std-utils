@@ -1,0 +1,1 @@
+alias clean='rm -rf build/ .pytest*/ .tox/ .coverage*'
