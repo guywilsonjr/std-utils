@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from typing import Any, Coroutine, Optional
 
 
@@ -8,14 +7,10 @@ class Expectation:
     expected: Optional[Any] = None
 
     def __init__(
-        self,
-        expecting: bool = False,
-        expectation: Optional[Any] = None
+        self, expecting: bool = False, expectation: Optional[Any] = None
     ):
         self.expecting = expecting
         self.expected = expectation
-
-
 
 
 def sync_test_coro(
@@ -39,13 +34,12 @@ def sync_test_coro(
 
 
 def get_benchmark_data(
-    coro: callable[Any,Any, tuple],
+    coro: Coroutine[[Any], Any, tuple],
     args: Optional[tuple] = None,
     kwargs: Optional[dict] = None
 ) -> dict:
     new_benchmark_data = {
-        'function_to_benchmark': sync_test_coro,
-        'corofunc': coro,
+        'function_to_benchmark': sync_test_coro, 'corofunc': coro,
     }
     if args:
         new_benchmark_data['coro_args'] = args

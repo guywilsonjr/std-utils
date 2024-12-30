@@ -2,6 +2,7 @@
 pythonpath = "src"
 cache_dir = "/dev/null"
 console_output_style = "progress-even-when-capture-no"
+
 addopts = [
     "-s",
     "-vvv",
@@ -24,10 +25,18 @@ addopts = [
     "--benchmark-warmup-iterations=5",
     "--benchmark-min-time=0.000000001",
     "--benchmark-autosave",
-    "--benchmark-cprofile-loops=20"
+    "--benchmark-cprofile-loops=20",
+    # Coverage flags
+    "--cov=.",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=json",
 ]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 log_cli_level = "INFO"
 log_cli = true
 testpaths = ["tests"]
+
+[tool.coverage.json]
+output = ".reports/coverage/coverage.json"
