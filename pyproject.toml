@@ -1,3 +1,52 @@
+[project]
+name = "std-python-utils"
+requires-python = ">=3.12"
+dynamic = ["dependencies", "version"]
+
+
+readme = "README.md"
+authors = [
+    { name = "Guy Wilson", email = "guywilsonjr@gmail.com" },
+]
+maintainers = [
+    { name = "Guy Wilson", email = "guywilsonjr@gmail.com" },
+]
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    "Development Status :: 3 - Alpha",
+    # Indicate who your project is intended for
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    # Pick your license as you wish (see also "license" above)
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)", # Specify the Python versions you support here.
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Systems Administration",
+    "Topic :: System :: Monitoring",
+    "Typing :: Typed"
+]
+
+[project.urls]
+Homepage = "https://github.com/guywilsonjr/std-utils"
+Repository = "https://github.com/guywilsonjr/std-utils"
+[build-system]
+# for mypy to run with mypy pydantic plugin need pydantic as well
+requires = [
+    "setuptools",
+    "setuptools_scm>=8",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
 [tool.pytest.ini_options]
 pythonpath = "src"
 cache_dir = "/dev/null"
@@ -9,23 +58,22 @@ addopts = [
     "-p no:cacheprovider",
     "--cache-clear",
     # benchmark flags
-    "--benchmark-enable",
-    "--benchmark-verbose",
-    "--benchmark-storage=file://.reports/benchmarks/",
-    "--benchmark-histogram=.reports/benchmarks/hist",
-    "--benchmark-cprofile-dump=.reports/benchmarks/cprofile",
-    "--benchmark-json=.reports/benchmarks/latest_benchmark.json",
-    "--benchmark-save-data",
-    "--benchmark-name=long",
-    "--benchmark-cprofile=cumtime_per",
-    "--benchmark-save=benchmark",
-    "--benchmark-sort=max",
-    "--benchmark-calibration-precision=20",
-    "--benchmark-warmup=on",
-    "--benchmark-warmup-iterations=5",
-    "--benchmark-min-time=0.000000001",
-    "--benchmark-autosave",
-    "--benchmark-cprofile-loops=20",
+    #"--benchmark-verbose",
+    #"--benchmark-storage=file://.reports/benchmarks/",
+    #"--benchmark-histogram=.reports/benchmarks/hist",
+    #"--benchmark-cprofile-dump=.reports/benchmarks/cprofile",
+    #"--benchmark-json=.reports/benchmarks/latest_benchmark.json",
+    #"--benchmark-save-data",
+    #"--benchmark-name=long",
+    #"--benchmark-cprofile=cumtime_per",
+    #"--benchmark-save=benchmark",
+    #"--benchmark-sort=max",
+    #"--benchmark-calibration-precision=20",
+    #"--benchmark-min-time=0.000000001",
+    #"--benchmark-autosave",
+    #"--benchmark-cprofile-loops=20",
+    #"--benchmark-warmup=on",
+    #"--benchmark-warmup-iterations=5",
     # Coverage flags
     "--cov=.",
     "--cov-branch",

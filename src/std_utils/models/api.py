@@ -4,7 +4,7 @@ from typing import Any, Literal, Optional
 
 import aiohttp
 import requests
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, Json, JsonValue
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, Json
 from requests import Session
 
 
@@ -39,8 +39,8 @@ class APIResponse(BaseModel):
     """
 
     status_code: int
-    headers: Json[Any] = Field(default_factory=get_empty_json)
-    data: Json[Any] = Field(default_factory=get_empty_json)
+    headers: dict = Field(default_factory=get_empty_json)
+    data: dict = Field(default_factory=get_empty_json)
     error: Optional[str] = None
 
 
@@ -50,9 +50,9 @@ class APIRequest(BaseModel):
     """
     endpoint: HttpUrl
     method: http.HTTPMethod
-    headers: Json[Any] = Field(default_factory=get_default_headers)
-    query_params: JsonValue = Field(default_factory=get_empty_json)
-    body: JsonValue = Field(default_factory=get_empty_json)
+    headers: dict = Field(default_factory=get_default_headers)
+    query_params: dict = Field(default_factory=get_empty_json)
+    body: dict = Field(default_factory=get_empty_json)
 
     def send(self, session: Optional[Session] = None, **kwargs) -> Any:
         full_args = {
@@ -83,8 +83,7 @@ class APIRequest(BaseModel):
 
         if client_session:
             return await self.async_send_with_session(
-                client_session,
-                **full_args)
+                client_session, **full_args)
         else:
             async with aiohttp.ClientSession() as client_session:
                 return await self.async_send_with_session(
