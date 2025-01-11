@@ -4,4 +4,4 @@ msgpack
 numpy
 pydantic
 requests
-
+aws-cdk-lib
