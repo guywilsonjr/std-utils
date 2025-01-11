@@ -28,9 +28,7 @@ class APIHeaders(BaseModel):
     """
     model_config = ConfigDict(extra='allow')
     content_type: Literal['application/json'] = Field(
-        alias='Content-Type',
-        default='application/json',
-        serialization_alias='Content-Type')
+        alias='Content-Type', default='application/json', serialization_alias='Content-Type')
 
 
 class APIResponse(BaseModel):
@@ -53,60 +51,39 @@ class APIRequest(BaseModel):
     headers: dict = Field(default_factory=get_default_headers)
     query_params: dict = Field(default_factory=get_empty_json)
     body: dict = Field(default_factory=get_empty_json)
+    session: Optional[Session] = None
+    client_session: Optional[aiohttp.ClientSession] = None
 
-    def send(self, session: Optional[Session] = None, **kwargs) -> Any:
-        full_args = {
-            'method': self.method,
-            'url': self.endpoint.unicode_string(),
-            'headers': self.headers,
-            'params': self.query_params,
-            'json': self.body
+    @property
+    def full_args(self) -> dict[str, Any]:
+        return {
+            'method': self.method, 'url': self.endpoint.unicode_string(), 'headers': self.headers, 'params': self.query_params, 'json': self.body
         }
+
+    def get_args(self, **kwargs) -> dict[str, Any]:
+        return {**kwargs, **{k: v for k, v in self.full_args if k not in kwargs}}
+
+    def send(self, **kwargs) -> Any:
         # Allow overriding the default values
-        full_args.update(kwargs)
-        if session:
-            return session.request(
-                **full_args)
-        return requests.request(**full_args)
+        return self.session.request(**kwargs) if self.session else requests.request(**kwargs)
 
     async def async_send(
-        self, client_session: Optional[aiohttp.ClientSession] = None, **kwargs
-    ) -> Any:
-        full_args = {
-            'method': self.method,
-            'url': self.endpoint.unicode_string(),
-            'headers': self.headers,
-            'params': self.query_params,
-            'json': self.body
-        }
-        full_args.update(kwargs)
-
-        if client_session:
-            return await self.async_send_with_session(
-                client_session, **full_args)
+        self, ) -> Any:
+        if self.client_session:
+            return await self.async_send_with_session(self.client_session, **self.full_args)
         else:
             async with aiohttp.ClientSession() as client_session:
-                return await self.async_send_with_session(
-                    client_session, **full_args)
+                return await self.async_send_with_session(client_session, **self.full_args)
 
     async def async_send_with_session(
         self, client_session: aiohttp.ClientSession, **kwargs
     ) -> Any:
-        full_args = {
-            'method': self.method,
-            'url': self.endpoint.unicode_string(),
-            'headers': self.headers,
-            'params': self.query_params,
-            'json': self.body
+        args = self.get_args(**kwargs)
+        method_func_map = {
+            http.HTTPMethod.GET: client_session.get,
+            http.HTTPMethod.POST: client_session.post,
+            http.HTTPMethod.PUT: client_session.put,
+            http.HTTPMethod.DELETE: client_session.delete,
+            http.HTTPMethod.PATCH: client_session.patch,
         }
-        full_args.update(kwargs)
-        if self.method == http.HTTPMethod.GET:
-            return await client_session.get(**full_args)
-        elif self.method == http.HTTPMethod.POST:
-            return await client_session.post(**full_args)
-        elif self.method == http.HTTPMethod.PUT:
-            return await client_session.put(**full_args)
-        elif self.method == http.HTTPMethod.DELETE:
-            return await client_session.delete(**full_args)
-        elif self.method == http.HTTPMethod.PATCH:
-            return await client_session.patch(**full_args)
+        return await method_func_map[self.method](**args)
