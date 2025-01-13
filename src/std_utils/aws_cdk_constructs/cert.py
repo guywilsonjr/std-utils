@@ -7,7 +7,14 @@ from aws_cdk import Environment, Stack
 class Cert(Stack):
 
     def __init__(
-        self, app: Stack, stack_id: str, env: Environment, hz: IHostedZone, site_name: str, cert_region: str = None, ) -> None:
+        self,
+        app: Stack,
+        stack_id: str,
+        env: Environment,
+        hz: IHostedZone,
+        site_name: str,
+        cert_region: str = None
+    ) -> None:
         if not cert_region:
             cert_region = env.region
         super().__init__(app, stack_id, env=Environment(account=env.account, region=cert_region))
