@@ -5,3 +5,4 @@ numpy
 pydantic
 requests
 aws-cdk-lib
+boto3

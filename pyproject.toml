@@ -60,6 +60,8 @@ addopts = [
     "-vvv",
     "-p no:cacheprovider",
     "--cache-clear",
+    "-n=auto",
+    "--maxprocesses=8",
     # benchmark flags
     #"--benchmark-verbose",
     #"--benchmark-storage=file://.reports/benchmarks/",
@@ -91,3 +93,20 @@ testpaths = ["tests"]
 
 [tool.coverage.json]
 output = ".reports/coverage/coverage.json"
+
+
+[tool.tox]
+
+legacy_tox_ini = """
+[tox]
+envlist = py313
+
+[testenv]
+recreate = true
+#parallel = all
+#parallel_show_output = true
+deps =
+    -rrequirements-test.txt
+commands =
+    python3 -m pytest
+"""

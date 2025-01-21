@@ -3,3 +3,6 @@ setuptools
 build
 memray
 pip-tools
+tox
+-r requirements.txt
+-r requirements-test.txt

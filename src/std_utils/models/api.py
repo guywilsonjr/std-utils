@@ -28,7 +28,10 @@ class APIHeaders(BaseModel):
     """
     model_config = ConfigDict(extra='allow')
     content_type: Literal['application/json'] = Field(
-        alias='Content-Type', default='application/json', serialization_alias='Content-Type')
+        alias='Content-Type',
+        default='application/json',
+        serialization_alias='Content-Type'
+    )
 
 
 class APIResponse(BaseModel):
@@ -46,6 +49,7 @@ class APIRequest(BaseModel):
     """
     Model that represents a generic API request.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     endpoint: HttpUrl
     method: http.HTTPMethod
     headers: dict = Field(default_factory=get_default_headers)
@@ -57,23 +61,37 @@ class APIRequest(BaseModel):
     @property
     def full_args(self) -> dict[str, Any]:
         return {
-            'method': self.method, 'url': self.endpoint.unicode_string(), 'headers': self.headers, 'params': self.query_params, 'json': self.body
+            'method': self.method,
+            'url': self.endpoint.unicode_string(),
+            'headers': self.headers,
+            'params': self.query_params,
+            'json': self.body
         }
 
     def get_args(self, **kwargs) -> dict[str, Any]:
-        return {**kwargs, **{k: v for k, v in self.full_args if k not in kwargs}}
+        return {
+            **kwargs, **{k: v for k, v in self.full_args if k not in kwargs}
+        }
 
     def send(self, **kwargs) -> Any:
         # Allow overriding the default values
-        return self.session.request(**kwargs) if self.session else requests.request(**kwargs)
+        return self.session.request(
+            **kwargs
+            ) if self.session else requests.request(**kwargs)
 
     async def async_send(
         self, ) -> Any:
         if self.client_session:
-            return await self.async_send_with_session(self.client_session, **self.full_args)
+            return await self.async_send_with_session(
+                self.client_session,
+                **self.full_args
+                )
         else:
             async with aiohttp.ClientSession() as client_session:
-                return await self.async_send_with_session(client_session, **self.full_args)
+                return await self.async_send_with_session(
+                    client_session,
+                    **self.full_args
+                    )
 
     async def async_send_with_session(
         self, client_session: aiohttp.ClientSession, **kwargs
