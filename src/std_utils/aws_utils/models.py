@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import Any
 
 from aws_cdk import App, Environment, Stack, Stage
 from aws_cdk.aws_route53 import IHostedZone
@@ -72,14 +73,19 @@ class CertStackConfig(CDKNestedStackConfig):
     cert_configs: list[CertConfig]
 
 
+class PipelineStageConfig(BaseModel):
+    stage_class: type[Stage]
+    stage_class_kwargs: dict[str, Any]
+
+
 class PipelineConfig(CDKAppStackConfig):
+    parent: App
     connection_arn: str
     repository_branch: GithubRepositoryBranch
-    id: str = 'Pipeline'
     trigger_on_push: bool = True
     self_mutation: bool = True
     docker_enabled: bool = True
-    stages: list[Stage] = Field(min_length=1)
+    stage_configs: list[PipelineStageConfig] = Field(min_length=1)
 
     @cached_property
     def docker_enabled_for_self_mutation(self) -> bool:

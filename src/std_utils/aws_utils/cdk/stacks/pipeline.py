@@ -8,7 +8,7 @@ class Pipeline(Stack):
     _default_synth_commands = ["npm ci", "npm run build", "npx cdk synth"]
 
     def __init__(self, config: PipelineConfig):
-        super().__init__(config.parent, config.stack_id, env=config.env)
+        super().__init__(config.parent, 'PipelineStack', env=config.env)
         repo_string = f'{config.repository_branch.repo.owner}/{config.repository_branch.repo.name}'
         pipeline = CodePipeline(
             self,
@@ -28,5 +28,9 @@ class Pipeline(Stack):
                 commands=self._default_synth_commands
             )
         )
-        for stage in config.stages:
+        for stage_config in config.stage_configs:
+            stage = stage_config.stage_class(
+                scope=self,
+                **stage_config.stage_class_kwargs
+            )
             pipeline.add_stage(stage)
