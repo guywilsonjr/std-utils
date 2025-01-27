@@ -1,6 +1,10 @@
+**/*.egg-info/
 tmp/
 .idea/
 .reports/benchmarks/Linux-CPython-3.13-64bit/
+build/
+dist/
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -12,9 +16,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/

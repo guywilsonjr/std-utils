@@ -1,5 +1,6 @@
 from functools import cached_property
 from typing import Any
+from std_utils.aws_utils.cdk.models import interface_overrides
 
 from aws_cdk import App, Environment, Stack, Stage
 from aws_cdk.aws_route53 import IHostedZone
@@ -14,10 +15,11 @@ class ConstructConfig(BaseModel):
     """
     Model that represents the configuration for the CDK stack.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     parent: Construct
     id: str
     env: Environment
-    model_config = ConfigDict(from_attributes=True)
 
 
 class CDKStackConfig(ConstructConfig):
@@ -39,11 +41,12 @@ class CDKNestedStackConfig(CDKStackConfig):
     parent: Stack
 
 
-class CertConfig(CDKNestedStackConfig):
-    cert_id: str = 'Cert'
+class CertConfig(ConstructConfig):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     hosted_zone: IHostedZone
     domain_name: str
     cert_region: AWSRegion
+    cert_id: str = 'Cert'
 
 
 class CloudfrontCertConfig(CertConfig):

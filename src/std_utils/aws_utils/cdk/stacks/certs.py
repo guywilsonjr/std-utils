@@ -1,7 +1,8 @@
 from aws_cdk import Stack
 from aws_cdk.aws_certificatemanager import Certificate, CertificateValidation
 
-from std_utils.aws_utils.models import CertConfig, CloudfrontCertConfig
+from std_utils.aws_utils.cdk.models.configs import CertConfig, \
+    CloudfrontCertConfig
 
 
 class Certs(Stack):

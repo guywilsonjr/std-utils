@@ -1,7 +1,7 @@
 from aws_cdk import Stack
 from aws_cdk.pipelines import CodePipeline, CodePipelineSource, ShellStep
 
-from std_utils.aws_utils.models import PipelineConfig
+from std_utils.aws_utils.cdk.models.configs import PipelineConfig
 
 
 class Pipeline(Stack):
