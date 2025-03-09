@@ -2,7 +2,7 @@ pip
 setuptools
 build
 memray
-pip-tools
+uv
 tox
 -r requirements.txt
 -r requirements-test.txt
