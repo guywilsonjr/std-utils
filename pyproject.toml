@@ -59,8 +59,8 @@ addopts = [
     "-vvv",
     "-p no:cacheprovider",
     "--cache-clear",
-    "-n=auto",
-    "--maxprocesses=8",
+    #"-n=auto",
+    #"--maxprocesses=8",
     # benchmark flags
     #"--benchmark-verbose",
     #"--benchmark-storage=file://.reports/benchmarks/",
@@ -101,11 +101,16 @@ legacy_tox_ini = """
 envlist = py313
 
 [testenv]
+allowlist_externals = uv
+install_requires = uv
+commands_pre = pip install uv
+install_command = uv pip install {opts} {packages}
+package = sdist
 recreate = true
 #parallel = all
 #parallel_show_output = true
 deps =
-    -rrequirements-test.txt
+  -rrequirements-test.txt
 commands =
     python3 -m pytest
 """

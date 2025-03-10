@@ -34,7 +34,7 @@ def sync_test_coro(
 
 
 def get_benchmark_data(
-    coro: Coroutine[[Any], Any, tuple],
+    coro: Coroutine[Any, Any, tuple],
     args: Optional[tuple] = None,
     kwargs: Optional[dict] = None
 ) -> dict:
