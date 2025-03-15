@@ -17,5 +17,5 @@ async def test_get_all_cpu_info():
 
 if benchmark_enabled:
     def test_get_all_cpu_info(benchmark: BenchmarkFixture):
-        benchmark_data = get_benchmark_data(cache.get_all_cpu_info)
+        benchmark_data: callable = get_benchmark_data(cache.get_all_cpu_info)
         benchmark(**benchmark_data)
